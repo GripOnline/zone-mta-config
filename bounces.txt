@@ -1,0 +1,573 @@
+# Bounce rules list
+# Format:
+#   regex,action,category,message
+# action: defer, reject, slowdown
+# categories:
+#   rate, block, spam, message, config, recipient, other, capacity, greylist, network, protocol, auth, blacklist
+
+# This file will be cached after ZoneMTA is started, so in order to reload the rules, send a SIGHUP signal to the master process
+
+#550-"JunkMail rejected - [hostname] [11.2.3.4]:24706 is in an RBL: Blocked - see https://www.spamcop.net/bl.shtml?1.2.3.4"
+^5\d\d.*www\.spamcop\.net,defer,blacklist,Sender IP blacklisted
+
+#550-Your message was rejected by this user and was not delivered -  mips space
+^550[ \-].*Your message was rejected by this user and was not delivered,defer,blacklist,Sender IP blacklisted
+
+#500 5.7.1 Symantec Zodiac
+^500[ \-]+5\.7\.1\s+Symantec Zodiac,defer,blacklist,Sender IP blacklisted
+
+# mail.com / GMX
+
+^554[ \-].* Service not available No SMTP service IP address is black listed,defer,blacklist,Sender IP blacklisted
+
+# Comcast
+
+^554[ \-].* found on one or more DNSBLs,defer,blacklist,Sender IP blacklisted
+
+# Spamhaus related error messages
+
+# 550 11.22.33.44 blacklisted see http://www.spamhaus.org/query/bl?ip=11.22.33.44
+^550[ \-]+[\d\.]+\s+blacklisted see\s,defer,blacklist,Sender IP blacklisted
+
+# 550 11.22.33.44 listed at spamhaus, see http://www.spamhaus.org
+^550[ \-]+[\d\.]+\s+listed at\s,defer,blacklist,Sender IP blacklisted
+
+# 550 5.2.1 Mailbox unavailable. Your IP address 11.22.33.44 is blacklisted using SPAMHAUS-XBL. Details: https://www.spamhaus.org/query/ip/11.22.33.44.
+^550[ \-]+5\.2\.1\s+Mailbox unavailable.* is blacklisted,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.0 Your server IP address is in the SpamHaus SBL-XBL database, bye
+^550[ \-]+5\.7\.0\s+Your server IP address is in,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.1 11.22.33.44 has been blocked by zen.spamhaus.org
+^550[ \-]+5\.7\.1\s+[\d\.]+ has been blocked,defer,blacklist,Sender IP blacklisted
+
+# 554 5.7.1 Service unavailable; Client host [1.2.3.4] blocked using ee.countries.nerd.dk; Your IP is in ee, rejected based on geographical location
+# Should it reject immediatelly, as in most cases we have addresses from the same region?
+^554[ \-]+5\.7\.1\s+.*rejected based on geographical location,defer,blacklist,Sender IP blacklisted by region
+
+# 421 4.7.1 Service unavailable; Client host [1.2.3.4] blocked using grey.rbl - Rechazo temporal, intentelo mas tarde por favor...Greylisting in action, please try again later
+^[45]\d\d[ \-]+[45]\.7\.1\s+.*Client host \[?[\d\.]+\]? blocked using grey.rbl,defer,greylist,Message temporarily Greylisted
+
+# 550 5.7.1 :127.0.0.4:Client host 11.22.33.44 blocked using 87.blocklist.zap; Mail from IP banned. To request removal from this list please visit http://www.spamhaus.org/query/bl?ip=$
+# 454 4.7.1 Service unavailable; Client host [1.2.3.4] blocked using dnsbl.sorbs.net; Currently Sending Spam See: http://www.sorbs.net/lookup.shtml?1.2.3.4
+# 554 5.7.1 Service unavailable; Client host [1.2.3.4] blocked using b.barracudacentral.org; http://www.barracudanetworks.com/reputation/?pr=1&ip=45.55.44.239
+^[45]\d\d[ \-]+[45]\.7\.1\s+.*Client host \[?[\d\.]+\]? blocked using,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.1 <sender@example.com>... 11.22.33.44 listed at zen.spamhaus.org
+^550[ \-]+5\.7\.1\s+<.*>\.\.\.\s[\d\.]+ listed at,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.1 <recipient@example.com>... Rejected: 11.22.33.44 listed at zen.spamhaus.org.
+^550[ \-]+5\.7\.1\s+<.*>\.\.\.\s+Rejected:\s*[\d\.]+ listed at,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.1 Blacklisted by zen.spamhaus.org. To avoid this problem on this particular server please visit http://spamfiltered.extra-dns.com/resolve/000-00-00-000-00-00-00-id-00000-00000 - Bezoek de site om dit probleem te verhelpen
+# Do not match: 550 5.7.1 Blacklisted by recipient
+^550[ \-]+5\.7\.1\s+Blacklisted by\s+(?!recipient),defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.1 Client address [11.22.33.44] blocked. You are in the SPAMMER List - Listed on The Spamhaus Project. See http://www.spamhaus.org/query/bl?ip=11.22.33.44
+^550[ \-]+5\.7\.1\s+.*You are in the SPAMMER List,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.1 Mail from 11.22.33.44 rejected using zen.spamhaus.org. Please see http://www.spamhaus.org/query/bl?ip=11.22.33.44
+^550[ \-]+5\.7\.1\s+Mail from \s*[\d\.]+ rejected using,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.1 Mail from IP 11.22.33.44 was rejected due to listing in Spamhaus XBL. For details please see http://www.spamhaus.org/query/bl?ip=11.22.33.44
+^550[ \-]+5\.7\.1\s+.*rejected due to listing in,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.1 Rejected. Sender 11.22.33.44 found in SPL-XBL listing; see http://www.spamhaus.org/query/bl?ip=11.22.33.44
+^550[ \-]+5\.7\.1\s+Sender [\d\.]+ found in,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.1 Rejected: 11.22.33.44 listed at zen.spamhaus.org
+^550[ \-]+5\.7\.1\s+Rejected: [\d\.]+ listed at,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.1 Service unavailable, Client host [11.22.33.44] blocked using Spamhaus. To request removal from this list see http://www.spamhaus.org/lookup.lasso (AS16012611)
+^550[ \-]+5\.7\.1\s+.*AS16012611,defer,blacklist,Sender IP blacklisted
+
+# 554 5.7.1 Service unavailable; Client host [mail.example.com] blocked using multi.uribl.com
+# 554 5.7.1 Service unavailable; Client host [mail.example.com] blocked using multi.uribl.com; 127.0.0.1 -> Query Refused. See http://uribl.com/refused.shtml for more information [Your DNS IP: 1.2.3.4]
+# 554 5.7.1 Service unavailable; Sender address [user@example.com] blocked using dbl.spamhaus.org; https://www.spamhaus.org/query/domain/example.com
+# This is URIBL, so no point retrying as the message still includes spammy URL
+^554[ \-]+5\.7\.1\s+.*(uribl\.com| dbl\.),reject,spam,Spammy URL in message
+
+# Postfix default: $rbl_code Service unavailable; $rbl_class [$rbl_what] blocked using $rbl_domain${rbl_reason?; $rbl_reason}
+# 550 5.7.1 Service unavailable; client [11.22.33.44] blocked using spamhaus.org
+# 550-5.7.1 Service unavailable; client [11.22.33.44] blocked using zen.spamhaus.org For assistance, see http://www.scrolloutf1.com or contact your administrator. Please provide the following information in your problem report: Time: (Nov 02 11:59:39), Client: (11.22.33.44), Server: (recipient.example.com).
+# 521 5.7.1 Service unavailable; client [1.2.3.4] blocked using dnsbl.sorbs.net
+^5\d\d[ \-]+5\.7\.1\s+Service unavailable.*blocked using,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.1 The IP address was rejected by the Realtime Block List provider zen.spamhaus.org.
+^550[ \-]+5\.7\.1\s+.*Realtime Block List,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.1 The IP address was rejected by the sbl.spamhaus.org RBL.
+^550[ \-]+5\.7\.1\s+The IP address was rejected by,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.1 This system is configured to reject mail from mta.example.com. Connecting host [11.22.33.44] is listed by the lookup site 'zen.spamhaus.org.'.
+^550[ \-]+5\.7\.1\s+.*is listed by the lookup site,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.1 Your IP address is listed by https://spamhaus.org/zen, correct this
+^550[ \-]+5\.7\.1\s+.*IP address is listed by,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.107 The IP address was rejected by the sbl.spamhaus.org RBL.
+^550[ \-]+5\.7\.107\s+.*IP address was rejected by,defer,blacklist,Sender IP blacklisted
+
+# 550 Email blocked by SPAMHAUS
+^550[ \-]+Email blocked by,defer,blacklist,Sender IP blacklisted
+
+# 550 Listed in zen.spamhaus.org. https://www.spamhaus.org/query/ip/11.22.33.44
+^550[ \-]+Listed in\s+.*spamhaus,defer,blacklist,Sender IP blacklisted
+
+# 550 https://www.spamhaus.org/query/ip/11.22.33.44
+# 553 https://www.spamhaus.org/query/ip/11.22.33.44
+^55[03][ \-]+.*https?:\/\/www\.spamhaus\.org\/query,defer,blacklist,Sender IP blacklisted
+
+# 550-IP 11.22.33.44 is blacklisted (xbl.spamhaus.org). Help at/Hilfe unter www.mfaq.info
+^550[ \-]+IP [\d\.]+ is blacklisted,defer,blacklist,Sender IP blacklisted
+
+# 550-Rejected message because 11.22.33.44 is in a black list at sbl-xbl.spamhaus.org
+^550[ \-]+Rejected message because.*black list,defer,blacklist,Sender IP blacklisted
+
+# 553 5.3.0 11.22.33.44 Rejected - see http://www.spamhaus.org
+^553[ \-]+5\.3\.0\s+ [\d\.] Rejected.*spamhaus,defer,blacklist,Sender IP blacklisted
+
+# 553 5.3.0 <recipient@example.com>... Mail from 11.22.33.44 rejected,see http://www.spamhaus.org/lookup/
+^553[ \-]+5\.3\.0\s+<.*>\.\.\.\s+Mail from [\d\.] rejected,defer,blacklist,Sender IP blacklisted
+
+# 553 5.7.1 [BL21] Connections will not be accepted from 11.22.33.44, because the ip is in Spamhaus's list; see https://help.yahoo.com/kb/postmaster/SLN5070.html
+# 553 5.7.1 [TSS07] Connections will not be accepted from 11.22.33.44, because the ip is in Spamhaus's list; see https://help.yahoo.com/kb/postmaster/SLN5070.html
+^553[ \-]+5\.7\.1\s+\[(BL21|TSS07)\].*ip is in,defer,blacklist,Sender IP blacklisted
+
+# 553 Mail from 11.22.33.44 not allowed - 5.7.1 [BL23] Connections not accepted from IP addresses on Spamhaus XBL; see http://postmaster.yahoo.com/errors/550-bl23.html [550]
+^553[ \-]+Mail from.*Connections not accepted from IP,defer,blacklist,Sender IP blacklisted
+
+# 554 5.7.1 <recipient@example.com>: Recipient address rejected: https://www.spamhaus.org/query/ip/11.22.33.44
+# 554 5.7.1 Blocked - see http://www.spamhaus.org/query/bl?ip=11.22.33.44
+# 554 5.7.1 IP blocked see: https://www.spamhaus.org/query/ip/11.22.33.44
+# 554 5.7.1 You are sending spam (check http://www.spamhaus.org/query/bl?ip=11.22.33.44)
+# 554 5.7.1 mta.example.com[11.22.33.44] blocked using zen.spamhaus.org. Please see https://www.spamhaus.org/query/ip/11.22.33.44
+^554[ \-]+5\.7\.1\s+.*https?:\/\/www\.spamhaus\.org\/query,defer,blacklist,Sender IP blacklisted
+
+# 554 5.7.1 ACL dns_rbl; Client host [11.22.33.44] blocked using sa-ip4tset.blagr.emailsrvr.com=127.24.0.2 Spamhaus XBL. Please visit http://www.spamhaus.org/lookup/ for more information on why this message could not be delivered
+# 554 5.7.1 Service unavailable; Client host [11.22.33.44] blocked using sbl-xbl.spamhaus.org
+# 554 5.7.1 Service unavailable; Client host [11.22.33.44] blocked using sbl-xbl.spamhaus.org; https://www.spamhaus.org/query/ip/11.22.33.44
+^554[ \-]+5\.7\.1\s+.*Client host \[[\d\.]+\] blocked using,defer,blacklist,Sender IP blacklisted
+
+# 554 Denied [SHXBL] - Denied by Spamhaus XBL - See http://www.spamhaus.org/query/bl?ip=11.22.33.44 (Mode: normal)
+^554[ \-]+Denied \[SHXBL\],defer,blacklist,Sender IP blacklisted
+
+# 554 Refused. Your IP address is listed in the RBL at xbl.spamhaus.org
+^554[ \-]+Refused\. Your IP address is listed,defer,blacklist,Sender IP blacklisted
+
+# 554 Service unavailable; Client host [11.22.33.44] blocked using zen.spamhaus.org; https://www.spamhaus.org/query/ip/11.22.33.44
+# 554 Service unavailable; Client host [mta.example.com] blocked by zen.spamhaus.org; 11.22.33.44
+# 554-Service unavailable; Client host [mta.example.com] blocked using Barracuda Reputation; http://www.barracudanetworks.com/reputation/?r=1&ip=1.2.3.4
+^554[ \-]+Service unavailable.*blocked (using|by)\s,defer,blacklist,Sender IP blacklisted
+
+# 554 bosimpinc12 bizsmtp 11.22.33.44 is on the Spamhaus XBL blacklist. Please visit: http://www.spamhaus.org/query/bl?ip=11.22.33.44
+^554[ \-]+.*is on the\s.*\sblacklist,defer,blacklist,Sender IP blacklisted
+
+# 554 mx.recipient.com bizsmtp IB105. Connection refused. 11.22.33.44 is listed on the Exploits Block List (XBL) <http://www.spamhaus.org/query/ip/11.22.33.44> Please visit http://www.spamhaus.org/xbl/ for more information.
+^554[ \-]+.*https?:\/\/www\.spamhaus\.org\/query,defer,blacklist,Sender IP blacklisted
+
+# 554 mx.recipient.com cmsmtp 1sSZcfhLEUv3Q IP blacklisted by Spamhaus. For remediation please use https://www.spamhaus.org/lookup/ [103]
+# 591 sofia.nascimento@yanabg.com your host [1.2.3.4] is blacklisted by dnsbl.sorbs.net. Currently Sending Spam See: http://www.sorbs.net/lookup.shtml?1.2.3.4. Send your questions to blacklist-admin@mx01.cmailpro.net
+^5\d\d[ \-]+.*(IP|is) blacklisted by,defer,blacklist,Sender IP blacklisted
+
+# 550 Rejected: 11.22.33.44 is listed at work.drbl.example.net
+^550[ \-]+rejected.*is listed at\b,defer,blacklist,Sender IP blacklisted
+
+# 554 IP=11.22.33.44 - A problem occurred. (Ask your postmaster for help or to contact tosa@rx.t-online.de to clarify.) (BL)
+# 554 IP:11.22.33.44 - A problem occurred. (Ask your postmaster for help or to contact tosa@rx.t-online.de to clarify.)
+^554[ \-]+IP[:=].*problem occurred.*\(BL\),defer,blacklist,Sender IP blacklisted
+
+#554 IP=11.22.33.44 - Dialup/transient IP not allowed. Use a mailgateway or contact toda@rx.t-online.de if obsolete. (DIAL)
+^554[ \-]+IP[:=].*Dialup/transient IP not allowed,defer,blacklist,Sender IP blacklisted
+
+# 550 Rejected due to DNSBL server response (dnsbl.cobion.com - 1.2.3.4)
+^550[ \-]+Rejected due to DNSBL,defer,blacklist,Sender IP blacklisted
+
+# 550 Service unavailable; Client Host [1.2.3.4] blocked using Trend Micro RBL+. Please see http://www.mail-abuse.com/cgi-bin/lookup?ip_address=1.2.3.4
+^550[ \-]+.*blocked using Trend Micro RBL,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.1 --- SAATKE SEE TEADE OMA IT-MEHELE! --- TEIE server 1.2.3.4 on BLACKLISTIS dnsbl.sorbs.net, Sorbs blokeeris kirja! YOUR server 1.2.3.4 is in the blacklist dnsbl.sorbs.net, your message was blocked by Sorbs! Check http://www.robtex.com/ip/1.2.3.4.html#blacklists
+^550[ \-]+5\.7\.1\s+.*YOUR server \[?[\d\.]+\]? is in the blacklist,defer,blacklist,Sender IP blacklisted
+
+# 550 Rejected 1.2.3.4 found in dnsbl.sorbs.net
+^550[ \-]+Rejected.*found in dnsbl,defer,blacklist,Sender IP blacklisted
+
+# 554 Connection from 1.2.3.4 rejected for policy reasons. Host found in DNS blacklist at dnsbl.sorbs.net
+^55\d[ \-]+.*found in DNS blacklist,defer,blacklist,Sender IP blacklisted
+
+# 554 5.7.1 SORBS DNSBL Entry - see <http://www.us.sorbs.net/lookup.shtml?1.2.3.4>
+^55\d[ \-]+.*SORBS DNSBL,defer,blacklist,Sender IP blacklisted
+
+# 550 Mail from 1.2.3.4 rejected see: http://www.dnsbl.sorbs.net/
+^55\d[ \-]+.*rejected.*dnsbl[\.\s]sorbs,defer,blacklist,Sender IP blacklisted
+
+# 451 Currently Sending Spam See: http://www.sorbs.net/lookup.shtml?1.2.3.4
+^451[ \-]+Currently Sending Spam See,defer,blacklist,Sender IP blacklisted
+
+# 501 5.7.1 <sender@example.com>... Sender refused by the DNSBL dnsbl.sorbs.net
+^501[ \-]+5\.7\.1\s+.*Sender refused by the DNSBL,defer,blacklist,Sender IP blacklisted
+
+# 450 Requested action not taken:c1mx2, IwENCgC3+s5MYEpYXlIcAA--.4588S3, dnsbl.sorbs.net, please try again
+^450[ \-]+Requested action not taken.*dnsbl,defer,blacklist,Sender IP blacklisted
+
+# 550-"JunkMail rejected - [hostname] [1.2.3.4]:39153 is in an RBL on csi.cloudmark.com/reset-request/?ip=1.2.3.4 , see Poor Reputation Sender"
+# 554 *.terra.com cmsmtp 5.7.1 Service unavailable; Client host [1.2.3.4] blocked using cm-csi-v11; Cloudmark Poor Reputation Sender Blacklist http://csi.cloudmark.com/reset-request/?ip=1.2.3.4
+^5\d\d.*csi\.cloudmark\.com,defer,blacklist,Sender IP blacklisted
+
+# 554 5.5.4 Your IP 1.2.3.4 address has a bad reputation. To unblock visit http://cloud-security.net/unblock?{query-string}
+^554.*bad reputation.*cloud\-security\.net,defer,blacklist,Sender IP blacklisted
+
+# Who knows what server this is (edit: it's AT&T)
+#   https://www.pinpointe.com/blog/how-to-check-att-blacklist-request-ip-removal
+# 553 5.3.0 flph825 DNSBL:ATTRBL 521< 1.2.3.4 >_is_blocked.For assistance forward this email to abuse@example.com
+# 553 5.3.0 flpd594 DNSBL:RBL 521< 1.2.3.4 >_is_blocked.For assistance forward this email to abuse_rbl@abuse-att.net
+^553[ \-]+5\.3\.0[ \-]+.*DNSBL:(ATT)?RBL 5\d\d,defer,blacklist,Sender IP blacklisted
+
+# 554-mx.example.com Your access to this mail system has been rejected due to the sending MTA's poor reputation. If you believe that this failure is in error, please contact the intended recipient
+^554[ \-].*rejected.*poor reputation,defer,blacklist,Sender IP blacklisted
+
+# 553 5.7.1 <hostname[1.2.3.4]>: Client host rejected: Relaying denied - Your IP identified as spammer. Please contact 123
+^553[ \-]+5\.7\.1\s+.*Your IP identified as spammer\. Please contact,defer,blacklist,Sender IP blacklisted
+
+# Hotmail error messages
+# https://mail.live.com/mail/troubleshooting.aspx
+^421[ \-]+RP\-00\d,slowdown,rate,Rate limit exceeded
+^550[ \-]+DY\-001,reject,block,Using dynamic IP range
+^550[ \-]+DY\-002,reject,virus,Virus found
+^550[ \-]+OU\-001,defer,blacklist,Sender IP blocked
+^550[ \-]+OU\-002,reject,spam,Spam detected
+^550[ \-]+SC\-001,defer,blacklist,Spam detected
+^550[ \-]+SC\-002,defer,blacklist,Sender IP blocked
+^550[ \-]+SC\-003,reject,block,Sender is open relay
+^550[ \-]+SC\-004,reject,spam,Sender IP listed as spammer
+
+# 550 5.7.1 Unfortunately, messages from [1.2.3.4] weren't sent. Please contact your Internet service provider since part of their network is on our block list (S3150). You can also refer
+^550[ \-]5\.7\.\d+.*block list,defer,blacklist,Sender IP blocked
+
+^550[ \-]5\.4\.1.*Recipient address rejected: Access denied.* \[.*\.prod\.protection\.outlook\.com\],reject,recipient,Unknown user
+
+# 550 5.7.606 Access denied, banned sending IP [1.2.3.4]. To request removal from this list please visit https://sender.office.com/ and follow the directions. For more information please go to http://go.microsoft.com/fwlink/?LinkID=526655 (AS16012609) [DB5EUR01FT031.eop-EUR01.prod.protection.outlook.com]
+# 550 5.7.511 Access denied, banned sender[1.2.3.4]. To request removal from this list please forward this message to delist@messaging.microsoft.com. For more information please go to http://go.microsoft.com/fwlink/?LinkId=526653. AS(508) [AM5EUR02FT019.eop-EUR02.prod.protection.outlook.com]
+^550[ \-]5\.7\.\d+ Access denied. banned send,defer,blacklist,Sender IP blocked
+
+# 451 4.7.650 The mail server [1.2.3.4] has been temporarily rate limited due to IP reputation. For e-mail delivery information, see https://postmaster.live.com (S775)
+^[4]\d\d[ \-]+[45]\.7\.\d+\s+The mail server \[?[\d\.]+\]? has been temporarily rate limited due to IP reputation,defer,blacklist,Sender IP blacklisted
+
+# Yahoo error messages
+# https://help.yahoo.com/kb/SLN23996.html
+# https://help.yahoo.com/kb/postmaster/SLN3434.html
+# Yahoo IPTS04 has no 421 (Postfix shows it as non ESMTP error)
+IPTS04,defer,spam,temporarily deferred due to user complaints
+^421[ \-]+4\.7\.0 \[TS\d+\],defer,spam,Unusual traffic or users complain about spam from this sender
+^421[ \-]+4\.7\.1 \[TS\d+\],reject,blacklist,Sender IP blocked
+^451[ \-]+VS1\-IP\b,reject,block,Sender is open relay
+^451[ \-]+VS1\-MF\b,reject,spam,From address is spammer
+^553[ \-]+5\.7\.1 \[BL,defer,blacklist,Blacklisted by Spamhaus
+^554[ \-]+5\.7\.5 \(AU01\),reject,message,Invalid DKIM signature
+^554[ \-]+.*This user doesn't have,reject,recipient,Unknown user
+^554[ \-]+.*\[PH01\],reject,blacklist,Policy error that appears to be blacklist
+
+# AOL error messages
+# https://postmaster.aol.com/error-codes
+^554[ \-]+.*\(?RTR:(BB|DU),reject,block,Using dynamic IP range
+^554[ \-]+.*\(?RTR:CH,reject,virus,Virus found
+^554[ \-]+.*\(?RTR:RD,reject,config,Invalid reverse DNS
+^554[ \-]+.*\(?RTR:(SC|BL),defer,blacklist,Sender IP blocked
+^554[ \-]+.*\(?RTR:GE,defer,other,Technical error
+^554[ \-]+.*\(?HVU:B\d,reject,message,Message content blocked
+^554[ \-]+.*\(?RLY:(B1|B2),slowdown,rate,Rate limit exceeded
+^554[ \-]+.*\(?RLY:(B2|BL),defer,blacklist,Sender IP blocked
+^554[ \-]+.*\(?RLY:BD,reject,message,Message content blocked
+^(421|554)[ \-]+.*\(?RLY:(CH),reject,spam,Spam detected
+^554[ \-]+.*\(?RLY:IR,reject,block,Using dynamic IP range
+^554[ \-]+.*\(?RLY:SN,reject,sender,Unauthorized sender
+^421[ \-]+.*\(?DYN:T\d,slowdown,rate,Rate limit exceeded
+^5\d\d[ \-]+.*\(?CON:B1,defer,blacklist,Sender IP blocked
+^421[ \-]+.*\(?CON:B1,defer,block,Sender IP temporary blocked
+^554[ \-]+.*\(?DMARC:,reject,dmarc,Message failed DMARC Evaluation
+^421[ \-]+.*\(?MFF:,defer,message,Future date in message
+
+# Gmail error messages
+# https://support.google.com/a/answer/3726730?hl=en
+^421[ \-]+4\.7\.0\s+.*IP not in whitelist,reject,block,Sender IP blocked
+^421[ \-]+4\.7\.0\s+.*unsolicited mail originating,defer,block,Sender IP blocked for Spam
+^421[ \-]+4\.7\.0\s+.*unsolicited mail,defer,spam,Spam detected
+^421[ \-]+4\.7\.0\s+.*message has been blocked,reject,spam,Spam detected
+^421[ \-]+4\.7\.0\s+.*TLS required,defer,config,TLS required
+^450[ \-]+4\.2\.1\s+.*mail too quickly,defer,recipient,Recipient overloaded
+^450[ \-]+4\.2\.1\s+.*rate that prevents,defer,recipient,Recipient overloaded
+^450[ \-]+4\.2\.1\s+.*Peak SMTP,slowdown,rate,Relay limit exceeded
+^550[ \-]+5\.7\.1\s+.*not RFC 5322,reject,message,Message content blocked
+^550[ \-]+5\.7\.1\s+.*unsolicited mail originating,reject,spam,Sender IP blocked for Spam
+^550[ \-]+5\.7\.1\s+.*unsolicited mail,reject,spam,Spam detected
+^550[ \-]+5\.7\.1\s+.*not authorized,reject,block,Sender IP blocked
+^550[ \-]+5\.7\.1\s+.*policy that prohibited,reject,policy,Blocked by recipient
+^550[ \-]+5\.7\.1\s+.*IPv6 sending guidelines,reject,config,Invalid PTR or missing DKIM
+^452[ \-]+4\.2\.2\s+.*over quota,reject,capacity,Gmail Mailbox is full
+^552[ \-]+5\.7\.0\s+.*potential security issue,reject,virus,Suspicious attachment
+^550[ \-]+5\.1\.1\s+.*does not exist,reject,recipient,The email account does not exist
+^552[ \-]+5\.7\.0\s+.*potential security issue,reject,virus,Message contains suspicious content
+^550[ \-]+5\.7\.\d+\s+.*due to domain's DMARC policy,reject,dmarc,Message rejected due to DMARC policy
+
+# Orange error messages
+
+# 421 mwinf5c63 ME Trop de connexions, veuillez verifier votre configuration. Too many connections, slow down. OFR005_104 [104]
+^421[ \-].*Too many connections,defer,capacity,Too many connections
+# 552 5.1.1 Boite du destinataire pleine. Recipient overquota. OFR_417 [417]
+^552[ \-]+5\.1\.1\s+.*Recipient overquota,reject,capacity,Mailbox is full
+# 550 5.1.1 Adresse d au moins un destinataire invalide. Invalid recipient. OFR_416 [416]
+^550[ \-]+5\.1\.1\s+.*Invalid recipient,reject,recipient,The email account does not exist
+
+# Hot.ee error messages
+^550[ \-]+5\.2\.1\s+.*is expired account,reject,recipient,Expired Email account
+^451[ \-]+4\.3\.5\s+Server configuration problem,defer,envelope,User Name In Email Address Not Valid
+^552[ \-]+5\.2\.2\s+.*Mailbox is full,reject,capacity,Hot.ee Mailbox is full
+
+# Mail.ee error messages
+^554[ \-]+5\.2\.1\s+.*Inactive user,reject,recipient,Disabled Email account
+
+# Mail.ru error messages
+^550 spam message rejected,reject,spam,Spam message
+
+# Yandex error messages
+^451[ \-]+4\.7\.1\s+.*service is currently unavailable,defer,capacity,Server currently not available
+
+# Telenet BE
+# 421 xxxxxx.telenet-ops.be cmsmtp 1.2.3.4 sorry, you have temporarily been blacklisted
+^421 .*\.telenet-ops\.be cmsmtp [\d\.]+ sorry,defer,blacklist,Sender IP blacklisted
+^552[ \-]+5\.2\.0\s+.*Your message is considered spam,defer,blacklist,Sender IP blacklisted
+
+# Other servers
+
+# Barracuda
+# 550 permanent failure for one or more recipients (user@example.com:blocked)
+^550[ \-]+permanent failure.*:blocked,defer,blacklist,Sender IP blacklisted
+
+# 550 csi.mimecast.org Poor Reputation Sender. - https://community.mimecast.com/docs/DOC-1369#550 [vH7Ns8biNg-p6EfZ0QaVMQ.us149]
+^55[40][ \-].*Poor Reputation Sender,defer,blacklist,Sender IP blacklisted
+
+# 550 Rejected by header based Anti-Spoofing policy: user@example.com - https://community.mimecast.com/docs/DOC-1369#550 [_g67iKwmNreAb9PeazQFDQ.us227]
+^550[ \-]+Rejected by.*policy,reject,policy,Blocked by recipient
+
+# 550 5.5.4 ETP208 Your IP 1.2.3.4 is listed by Invaluement. Please see http://www.invaluement.com/research/ if you feel this is in error - B15601640DCD26CE53bc5f8c6
+^550[ \-]+5\.5\.4\s+.*listed by Invaluement,defer,blacklist,Sender IP blacklisted
+
+# 550 Too many invalid recipients
+# Happens when a server starts blocking an IP after too many invalid RCPT TO calls were made
+# Blocking happens on connect, so no way to issue any valid commands to fix this
+# disabled for now, caused more issues than resolved
+^550[ \-]Too many invalid recipients,defer,other,Sender IP blacklisted
+
+# 550 Black listed at hostkarma http://ipadmin.junkemailfilter.com/remove.php?ip=1.2.3.4
+^550[ \-]Black listed at\s,defer,blacklist,Sender IP blacklisted
+
+# 550 The sending IP (1.2.3.4) is listed on https://spamrl.com/. Please resolve this and retry.
+^550[ \-]The sending IP \([\d\.]+\) is listed,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.1 1.2.3.4 listed at dnsbl.cobion.com
+^550[ \-]+5\.7\.1\s+[\d\.]+ listed at,defer,blacklist,Sender IP blacklisted
+
+# 554 resimta-po-11v.sys.comcast.net resimta-po-11v.sys.comcast.net 1.2.3.4 found on one or more DNSBLs, see http://postmaster.comcast.net/smtp-error-codes.php#BL000010
+^554 .* found on one or more DNSBLs,defer,blacklist,Sender IP blacklisted
+
+# 550 #5.7.1 Your access to submit messages to this e-mail system has been rejected.
+^550[ \-].* Your access to submit messages to this e-mail system has been rejected,defer,blacklist,Sender IP blacklisted
+
+# 554 5.7.1 You are not allowed to connect
+^554[ \-].* You are not allowed to connect,defer,blacklist,Sender IP blacklisted
+
+# 554 5.7.1 Rejected because Bad IP
+^554[ \-].* Bad IP,defer,blacklist,Sender IP blacklisted
+
+# 554 Blocked - see https://ipcheck.proofpoint.com/?ip=1.2.3.4
+^554[ \-]Blocked,defer,blacklist,Sender IP blacklisted
+
+# 550 5.7.0 Blocked - see https://ipcheck.proofpoint.com/?ip=1.2.3.4
+^550[ \-]+5\.7\.0 Blocked,defer,blacklist,Sender IP blacklisted
+
+# 550-"Email blocked by GeoIP spam filter. Listed by HOSTKARMA/JUNKEMAILFILTER. Country [IP], XX [1.2.3.4] - IntCode491003 - (example.com)"
+^550[ \-].*Email blocked by GeoIP,defer,blacklist,Sender IP blacklisted
+
+^4\d\d\b.*Greylist,defer,greylist,Message temporarily Greylisted
+^4\d\d\b.*try again,defer,greylist,Message temporarily Greylisted
+^550[ \-]+5.7.1.*\bspam,reject,spam,Message detected as spam
+^554 Invalid mailbox,reject,envelope,Invalid mailbox
+^554[ \-]+5\.7\.105\s.*SenderFilterConfig,reject,block,Blocked by recipient
+^554[ \-]+5\.7\.1\s.*Unknown recipient,reject,recipient,Unknown user
+^550[ \-]+5\.1\.1\s.*User unknown,reject,recipient,Unknown user
+^451[ \-]+4\.3\.0\s.*file write error,defer,capacity,Server can't write to queue
+^554 rejected due to virus,reject,virus,Message contains a virus
+^550[ \-]+5\.7\.512\s.*message must be RFC,reject,message,Malformed message
+^550[ \-]+5\.7\.0\s.*Local Policy Violation,reject,policy,Sender blocked by policy
+^554\s.*#5\.1\.1\b,reject,recipient,Unknown user
+
+# 550 DNS error when resolving MX server for example.com: Domain name not found
+^550[ \-]+DNS error,defer,network,Email Routing Issue Due To Network
+
+# 550 5.1.1 Mail Refused - Address <user@example.com> Recipient Unknown
+^550[ \-]+5\.1\.1.*Recipient Unknown,reject,recipient,Recipient Unknown
+# 550 5.1.1 <user@example.com> recipient rejected
+^550[ \-]+5\.1\.1.*recipient rejected,reject,recipient,Recipient Unknown
+# 554 delivery error: dd Not a valid recipient - atlas315.free.mail.ne1.yahoo.com
+^554[ \-]+.*Not a valid recipient,reject,recipient,Recipient Unknown
+# 553 sorry, that domain isn't in my list of allowed rcpthosts; no valid cert for gatewaying (#5.7.1)
+^553[ \-]+.*list of allowed rcpthost,reject,recipient,Recipient Unknown
+
+# Temporary errors by Enhanced Status Codes
+
+^\d{3}[ \-]+4\.0\.0\b,defer,other,Unknown Issue
+^\d{3}[ \-]+4\.1\.0\b,defer,envelope,Unknown Issue With Recipient's Email Address
+^\d{3}[ \-]+4\.1\.1\b,defer,envelope,User Name In Email Address Not Valid
+^\d{3}[ \-]+4\.1\.2\b,defer,envelope,Domain Name Of Email Address Not Valid
+^\d{3}[ \-]+4\.1\.3\b,defer,envelope,Email Address Malformed
+^\d{3}[ \-]+4\.1\.4\b,defer,recipient,Multiple Mailboxes For Recipient
+^\d{3}[ \-]+4\.1\.5\b,defer,recipient,Valid Email Address
+^\d{3}[ \-]+4\.1\.6\b,defer,recipient,Email Address No Longer Accepts Or Forwards Messages
+^\d{3}[ \-]+4\.1\.7\b,defer,envelope,Sender's Address Is Written Incorrectly
+^\d{3}[ \-]+4\.1\.8\b,defer,config,Sending Address Is Bad Or Can't Accept Replies
+^\d{3}[ \-]+4\.1\.9\b,defer,recipient,Message Routed To Non-Email System
+^\d{3}[ \-]+4\.2\.0\b,defer,recipient,Unknown Issue With Mailbox
+^\d{3}[ \-]+4\.2\.1\b,defer,capacity,Mailbox Is Not Accepting New Messages
+^\d{3}[ \-]+4\.2\.2\b,defer,capacity,Mailbox Is Full
+^\d{3}[ \-]+4\.2\.3\b,defer,message,Message Is Too Long
+^\d{3}[ \-]+4\.2\.4\b,defer,recipient,Mailbox Has A Mailing List System Issue
+^\d{3}[ \-]+4\.3\.0\b,defer,recipient,Unknown Issue With The Receiving System
+^\d{3}[ \-]+4\.3\.1\b,defer,capacity,Email System Is Full
+^\d{3}[ \-]+4\.3\.2\b,defer,recipient,Receiving Email System Not Operating
+^\d{3}[ \-]+4\.3\.3\b,defer,message,Message Features Not Supported By Receiving System
+^\d{3}[ \-]+4\.3\.4\b,defer,message,Message Is Too Large
+^\d{3}[ \-]+4\.3\.5\b,defer,recipient,Recipient System Incorrectly Configured
+^\d{3}[ \-]+4\.3\.6\b,defer,message,Message Priority Issue
+^\d{3}[ \-]+4\.4\.0\b,defer,network,Unknown Issue With Network Connection
+^\d{3}[ \-]+4\.4\.1\b,defer,network,Network Is Busy
+^\d{3}[ \-]+4\.4\.2\b,defer,network,Network Connection Timed Out
+^\d{3}[ \-]+4\.4\.3\b,defer,network,Network Issue With The Receiving System
+^\d{3}[ \-]+4\.4\.4\b,defer,network,Email Routing Issue Due To Network
+^\d{3}[ \-]+4\.4\.5\b,defer,network,Overloaded Network
+^\d{3}[ \-]+4\.4\.6\b,defer,network,Network Issue Caused A Mail Loop
+^\d{3}[ \-]+4\.4\.7\b,defer,network,Message Expired Before Delivery Completed
+^\d{3}[ \-]+4\.5\.0\b,defer,config,Unknown Issue With Your Email Server
+^\d{3}[ \-]+4\.5\.1\b,defer,protocol,Bad Messaging Command In Transmission
+^\d{3}[ \-]+4\.5\.2\b,defer,protocol,Email System Sent Bad Command
+^\d{3}[ \-]+4\.5\.3\b,defer,message,Too Many Recipients For Message
+^\d{3}[ \-]+4\.5\.4\b,defer,protocol,Email System Sent Bad Command
+^\d{3}[ \-]+4\.5\.5\b,defer,protocol,Email Systems Were Incompatible
+^\d{3}[ \-]+4\.5\.6\b,defer,protocol,Messaging Command In Transmission Too Long
+^\d{3}[ \-]+4\.6\.0\b,defer,message,Unknown Issue With The Message Content
+^\d{3}[ \-]+4\.6\.1\b,defer,message,Message Content Or Attachment Not Supported
+^\d{3}[ \-]+4\.6\.2\b,defer,message,Message Content Not Accepted By Recipient Server
+^\d{3}[ \-]+4\.6\.3\b,defer,message,Message Content Could Not Be Processed For Delivery
+^\d{3}[ \-]+4\.6\.4\b,defer,network,Content Loss During Delivery
+^\d{3}[ \-]+4\.6\.5\b,defer,network,Message Content Not Accessible To Recipient Server
+^\d{3}[ \-]+4\.6\.6\b,defer,network,Email Content Could Not Be Accessed
+^\d{3}[ \-]+4\.6\.7\b,defer,envelope,Email Address Format Not Supported
+^\d{3}[ \-]+4\.6\.8\b,defer,protocol,Email Servers Are Not Responding Appropriately
+^\d{3}[ \-]+4\.6\.9\b,defer,protocol,Email Servers Are Not Communicating With Each Other
+^\d{3}[ \-]+4\.6\.10\b,defer,protocol,Email Servers Are Not Responding Appropriately
+^\d{3}[ \-]+4\.7\.0\b,defer,policy,Unknown Security Or Policy Concern
+^\d{3}[ \-]+4\.7\.1\b,defer,block,Message Sender Blocked By Receiving Server
+^\d{3}[ \-]+4\.7\.2,defer,auth,Not Authorized To Send To Mailing List
+^\d{3}[ \-]+4\.7\.3,defer,other,Security Features Could Not Be Interpreted
+^\d{3}[ \-]+4\.7\.4,defer,auth,User Authentication For Message Failed
+^\d{3}[ \-]+4\.7\.5,defer,message,Message Authentication Issues
+^\d{3}[ \-]+4\.7\.6,defer,message,Message Encryption Issues
+^\d{3}[ \-]+4\.7\.7,defer,message,Potentially Corrupt Message
+^\d{3}[ \-]+4\.7\.8,defer,auth,User Authentication Failed
+^\d{3}[ \-]+4\.7\.9,defer,auth,Security Issue With User Authentication
+^\d{3}[ \-]+4\.7\.10\b,defer,auth,Stronger Security Or Encryption Needed
+^\d{3}[ \-]+4\.7\.11\b,defer,auth,Encryption Needed For Network Connection
+^\d{3}[ \-]+4\.7\.12\b,defer,auth,Authentication Required
+^\d{3}[ \-]+4\.7\.13\b,defer,block,Sender Account Disabled
+^\d{3}[ \-]+4\.7\.14\b,defer,spam,Potential Security Issue For Sender
+^\d{3}[ \-]+4\.7\.15\b,defer,message,Message Priority Level Too Low
+^\d{3}[ \-]+4\.7\.16\b,defer,message,Message Too Large For Given Priority Level
+
+# Permanent errors by Enhanced Status Codes
+
+^\d{3}[ \-]+5\.0\.0\b,reject,other,Unknown Issue
+^\d{3}[ \-]+5\.1\.0\b,reject,envelope,Unknown Issue With Email Address
+^\d{3}[ \-]+5\.1\.1\b,reject,envelope,User Name Of Email Address Not Valid
+^\d{3}[ \-]+5\.1\.2\b,reject,envelope,Domain Name Of Email Address Not Valid
+^\d{3}[ \-]+5\.1\.3\b,reject,envelope,Email Address Malformed
+^\d{3}[ \-]+5\.1\.4\b,reject,recipient,Multiple Mailboxes For Recipient
+^\d{3}[ \-]+5\.1\.5\b,reject,recipient,Valid Email Address
+^\d{3}[ \-]+5\.1\.6\b,reject,recipient,Email Address No Longer Accepts Or Forwards Messages
+^\d{3}[ \-]+5\.1\.7\b,reject,envelope,Sender's Address Is Written Incorrectly
+^\d{3}[ \-]+5\.1\.8\b,reject,config,Sending Address Is Bad Or Can't Accept Replies
+^\d{3}[ \-]+5\.1\.9\b,reject,recipient,Message Routed To Non-Email System
+^\d{3}[ \-]+5\.2\.0\b,reject,recipient,Unknown Issue With Mailbox
+^\d{3}[ \-]+5\.2\.1\b,reject,capacity,Mailbox Is Not Accepting New Messages
+^\d{3}[ \-]+5\.2\.2\b,reject,capacity,Mailbox Is Full
+^\d{3}[ \-]+5\.2\.3\b,reject,message,Message Is Too Long
+^\d{3}[ \-]+5\.2\.4\b,defer,recipient,Mailbox Has A Mailing List System Issue
+^\d{3}[ \-]+5\.3\.0\b,reject,recipient,Unknown Issue With The Receiving System
+^\d{3}[ \-]+5\.3\.1\b,reject,capacity,Email System Is Full
+^\d{3}[ \-]+5\.3\.2\b,defer,recipient,Receiving Email System Not Operable
+^\d{3}[ \-]+5\.3\.3\b,reject,message,Message Features Not Supported
+^\d{3}[ \-]+5\.3\.4\b,reject,message,Message Is Too Large
+^\d{3}[ \-]+5\.3\.5\b,reject,config,Incorrect Configuration Of System
+^\d{3}[ \-]+5\.3\.6\b,reject,message,Message Priority Issue
+^\d{3}[ \-]+5\.4\.0\b,reject,network,Unknown Issue With Network Connection
+^\d{3}[ \-]+5\.4\.1\b,defer,network,Network Is Busy
+^\d{3}[ \-]+5\.4\.2\b,defer,network,Network Connection Timed Out
+^\d{3}[ \-]+5\.4\.3\b,defer,network,Network Issue With The Receiving System
+^\d{3}[ \-]+5\.4\.4\b,reject,network,Email Routing Issue Due To Network
+^\d{3}[ \-]+5\.4\.5\b,defer,network,Overloaded Network
+^\d{3}[ \-]+5\.4\.6\b,reject,network,Network Issue Caused A Mail Loop
+^\d{3}[ \-]+5\.4\.7\b,reject,network,Message Expired Before Delivery Completed
+^\d{3}[ \-]+5\.5\.0\b,reject,config,Unknown Issue With Your Email Server
+^\d{3}[ \-]+5\.5\.1\b,reject,protocol,Bad Messaging Command In Transmission
+^\d{3}[ \-]+5\.5\.2\b,reject,protocol,Email System Sent Bad Command
+^\d{3}[ \-]+5\.5\.3\b,reject,envelope,Too Many Recipients For Message
+^\d{3}[ \-]+5\.5\.4\b,reject,protocol,Email System Sent Bad Command
+^\d{3}[ \-]+5\.5\.5\b,reject,protocol,Email Systems Were Incompatible
+^\d{3}[ \-]+5\.5\.6\b,reject,protocol,Messaging Command In Transmission Too Long
+^\d{3}[ \-]+5\.6\.0\b,reject,message,Unknown Issue With The Message Content
+^\d{3}[ \-]+5\.6\.1\b,reject,message,Message Content Or Attachment Not Supported
+^\d{3}[ \-]+5\.6\.10\b,defer,protocol,Email Servers Are Not Responding Appropriately
+^\d{3}[ \-]+5\.6\.2\b,reject,message,Message Content Not Accepted By Recipient Server
+^\d{3}[ \-]+5\.6\.3\b,reject,message,Message Content Could Not Be Processed For Delivery
+^\d{3}[ \-]+5\.6\.4\b,reject,network,Content Loss During Delivery
+^\d{3}[ \-]+5\.6\.5\b,reject,network,Message Content Not Accessible To Recipient Server
+^\d{3}[ \-]+5\.6\.6\b,reject,network,Email Content Could Not Be Accessed
+^\d{3}[ \-]+5\.6\.7\b,reject,envelope,Email Address Format Not Supported
+^\d{3}[ \-]+5\.6\.8\b,reject,protocol,Email Servers Are Not Responding Appropriately
+^\d{3}[ \-]+5\.6\.9\b,reject,protocol,Email Servers Are Not Communicating With Each Other
+^\d{3}[ \-]+5\.7\.0\b,reject,policy,Unknown Security Or Policy Concern
+^\d{3}[ \-]+5\.7\.1\b,reject,block,Message Sender Blocked By Receiving Server
+^\d{3}[ \-]+5\.7\.2\b,reject,auth,Not Authorized To Send To Mailing List
+^\d{3}[ \-]+5\.7\.3\b,reject,other,Security Features Could Not Be Interpreted
+^\d{3}[ \-]+5\.7\.4\b,reject,auth,User Authentication For Message Failed
+^\d{3}[ \-]+5\.7\.5\b,reject,message,Message Authentication Issues
+^\d{3}[ \-]+5\.7\.6\b,reject,message,Message Encryption Issues
+^\d{3}[ \-]+5\.7\.7\b,reject,message,Potentially Corrupt Message
+^\d{3}[ \-]+5\.7\.8\b,reject,auth,User Authentication Failed
+^\d{3}[ \-]+5\.7\.9\b,reject,auth,Security Issue With User Authentication
+^\d{3}[ \-]+5\.7\.10\b,reject,auth,Stronger Security Or Encryption Needed
+^\d{3}[ \-]+5\.7\.11\b,reject,auth,Encryption Needed For Network Connection
+^\d{3}[ \-]+5\.7\.12\b,reject,auth,Authentication Required
+^\d{3}[ \-]+5\.7\.13\b,reject,block,Sender Account Disabled
+^\d{3}[ \-]+5\.7\.14\b,reject,spam,Potential Security Issue For Sender
+^\d{3}[ \-]+5\.7\.15\b,reject,message,Message Priority Level Too Low
+^\d{3}[ \-]+5\.7\.16\b,reject,message,Message Too Large For Given Priority Level
+
+# General errors
+^450\b,defer,other,Mailbox unavailable
+^451\b,defer,other,Local error in processing
+^452\b,defer,capacity,Insufficient system storage
+^500\b,reject,protocol,Syntax error, command unrecognized
+^501\b,reject,protocol,Syntax error in parameters or arguments
+^502\b,reject,protocol,Command not implemented
+^503\b,reject,protocol,Bad sequence of commands
+^504\b,reject,protocol,Command parameter not implemented
+^521\b,reject,recipient,Domain does not accept mail
+^530\b,reject,auth,Access denied
+^550\b,reject,other,Mailbox unavailable
+^551\b,reject,other,User not local
+^552\b,reject,capacity,Exceeded storage allocation
+^553\b,reject,envelope,Mailbox name not allowed
+^554\b,reject,other,Transaction failed
+
+# All other errors
+^4\d\d,defer,other,Other temporary error
+^5\d\d,reject,other,Other permanent error

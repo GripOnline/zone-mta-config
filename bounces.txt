@@ -337,6 +337,10 @@ IPTS04,defer,spam,temporarily deferred due to user complaints
 ^421 .*\.telenet-ops\.be cmsmtp [\d\.]+ sorry,defer,blacklist,Sender IP blacklisted
 ^552[ \-]+5\.2\.0\s+.*Your message is considered spam,defer,blacklist,Sender IP blacklisted
 
+# KPN: kpnmail.nl / hetnet.nl
+# 521 5.5.0 Your IP has been blacklisted. Please contact abuse@kpn.com for more information.
+^521[ \-]+5\.5\.0\s+.*Your IP has been blacklisted,defer,blacklist,Sender IP blacklisted
+
 # Other servers
 
 # Barracuda

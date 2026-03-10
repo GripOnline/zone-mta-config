@@ -341,6 +341,10 @@ IPTS04,defer,spam,temporarily deferred due to user complaints
 # 521 5.5.0 Your IP has been blacklisted. Please contact abuse@kpn.com for more information.
 ^521[ \-]+5\.5\.0\s+.*Your IP has been blacklisted,defer,blacklist,Sender IP blacklisted
 
+# T-Online.de
+# 554 IP=1.2.3.4 - A problem occurred. Ask your postmaster for help or to contact tosa@rx.t-online.de to clarify. (TEM)
+^554[ \-]+IP.*\([\d\.]+\).*problem occurred.*t\-online,defer,blacklist,Sender IP blacklisted
+
 # Other servers
 
 # Barracuda

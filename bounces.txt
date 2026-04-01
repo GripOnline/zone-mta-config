@@ -345,6 +345,9 @@ IPTS04,defer,spam,temporarily deferred due to user complaints
 # 554 IP=1.2.3.4 - A problem occurred. Ask your postmaster for help or to contact tosa@rx.t-online.de to clarify. (TEM)
 ^554[ \-]+IP.*\([\d\.]+\).*problem occurred.*t\-online,defer,blacklist,Sender IP blacklisted
 
+# zeelandnet.nl
+^550[ \-]Sorry.+ we do not accept connections from you,defer,blacklist,Sender IP blacklisted
+
 # Other servers
 
 # Barracuda
